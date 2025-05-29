@@ -389,14 +389,18 @@ const MusicPlayerModule = (function() {
 
     // 修改处理下一首歌的函数
     function handleNextSong() {
-        currentSongIdx = getNextSongIndex();
-        loadSong(currentSongIdx, true);
+        if (songs.length > 0) {
+            currentSongIdx = getNextSongIndex();
+            loadSong(currentSongIdx, true); // Load new song and auto-play
+        }
     }
 
     // 修改处理上一首歌的函数
     function handlePrevSong() {
-        currentSongIdx = getPrevSongIndex();
-        loadSong(currentSongIdx, true);
+        if (songs.length > 0) {
+            currentSongIdx = getPrevSongIndex();
+            loadSong(currentSongIdx, true); // Load new song and auto-play
+        }
     }
 
     // 添加切换播放模式的函数
@@ -467,16 +471,6 @@ const MusicPlayerModule = (function() {
                  playCurrentSong();
             }
         }
-    }
-
-    function handleNextSong() {
-        currentSongIdx = (currentSongIdx + 1) % songs.length;
-        loadSong(currentSongIdx, true); // Load new song and auto-play
-    }
-
-    function handlePrevSong() {
-        currentSongIdx = (currentSongIdx - 1 + songs.length) % songs.length;
-        loadSong(currentSongIdx, true); // Load new song and auto-play
     }
 
     function updateProgressBar() {
@@ -697,19 +691,30 @@ document.addEventListener('DOMContentLoaded', () => {
         currentTimeDisplayId: 'currentTimeDisplay',
         totalDurationDisplayId: 'totalDurationDisplay',
         playerContainerId: 'musicPlayerContainer',
-        songList: resolvedAppConfigs.musicFiles || [] 
+        songList: getShuffledPlaylist(resolvedAppConfigs.musicFiles || []) 
     };
 
-        // Fisher-Yates 洗牌算法函数
+    // Fisher-Yates 洗牌算法函数
     function shuffleArray(array) {
         for (let i = array.length - 1; i > 0; i--) {
             const j = Math.floor(Math.random() * (i + 1));
             [array[i], array[j]] = [array[j], array[i]]; // 使用解构赋值交换元素
         }
+        return array; // 返回打乱后的数组
     }
 
-    // 打乱 songList 的顺序
-    shuffleArray(musicPlayerConfig.songList);
+    // 获取已保存的歌曲顺序或生成新的随机顺序
+    function getShuffledPlaylist(originalList) {
+        let shuffledIndexes = JSON.parse(localStorage.getItem('shuffledPlaylist'));
+        if (!shuffledIndexes || shuffledIndexes.length !== originalList.length) {
+            // 如果没有保存的顺序或长度不匹配，重新生成随机顺序
+            shuffledIndexes = Array.from({ length: originalList.length }, (_, i) => i);
+            shuffledIndexes = shuffleArray(shuffledIndexes);
+            localStorage.setItem('shuffledPlaylist', JSON.stringify(shuffledIndexes));
+        }
+        // 根据保存的顺序重新排列歌曲列表
+        return shuffledIndexes.map(index => originalList[index]);
+    }
 
     function initializeContentModulesOnce() {
         if (modulesInitialized) return;
