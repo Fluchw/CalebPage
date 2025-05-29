@@ -26,13 +26,47 @@ function getRandomColor(colorArray) {
     return colorArray[Math.floor(Math.random() * colorArray.length)];
 }
 
-// 随机选择一个橙色和一个蓝色
-const selectedOrange = getRandomColor(ORANGE_COLORS);
-const selectedBlue = getRandomColor(BLUE_COLORS);
+// 修改 getShuffledMusicFiles 函数，添加路径处理
+function getShuffledMusicFiles(musicFiles) {
+    // 获取当前页面的基础路径
+    const basePath = window.location.pathname.includes('/CalebPage') ? '/CalebPage/' : '/';
+    
+    // 处理音乐文件路径并打乱顺序
+    return [...musicFiles]
+        .map(song => ({
+            ...song,
+            src: basePath + song.src // 添加正确的基础路径
+        }))
+        .sort(() => Math.random() - 0.5);
+}
 
-// 随机决定内外顺序
-const INNER_COLOR = Math.random() < 0.5 ? selectedOrange : selectedBlue;
-const OUTER_COLOR = INNER_COLOR === selectedOrange ? selectedBlue : selectedOrange;
+// 随机选择颜色时使用 sessionStorage 而不是局部变量
+function getRandomColors() {
+    // 如果 sessionStorage 中已经有颜色配置，则使用它
+    const storedColors = sessionStorage.getItem('blackHoleRandomColors');
+    if (storedColors) {
+        return JSON.parse(storedColors);
+    }
+
+    // 否则生成新的随机颜色
+    const selectedOrange = getRandomColor(ORANGE_COLORS);
+    const selectedBlue = getRandomColor(BLUE_COLORS);
+    const isOrangeInner = Math.random() < 0.5;
+    
+    const colors = {
+        inner: isOrangeInner ? selectedOrange : selectedBlue,
+        outer: isOrangeInner ? selectedBlue : selectedOrange
+    };
+
+    // 保存到 sessionStorage
+    sessionStorage.setItem('blackHoleRandomColors', JSON.stringify(colors));
+    return colors;
+}
+
+// 随机选择一个橙色和一个蓝色
+const randomColors = getRandomColors();
+const INNER_COLOR = randomColors.inner;
+const OUTER_COLOR = randomColors.outer;
 
 // 添加颜色控制器
 const ColorController = {
@@ -72,8 +106,12 @@ const ColorController = {
     },
 
     reset() {
-        this.blackHoleEffect.innerColor = INNER_COLOR;
-        this.blackHoleEffect.outerColor = OUTER_COLOR;
+        // 清除 sessionStorage 中的颜色配置
+        sessionStorage.removeItem('blackHoleRandomColors');
+        // 重新生成随机颜色
+        const newColors = getRandomColors();
+        this.blackHoleEffect.innerColor = newColors.inner;
+        this.blackHoleEffect.outerColor = newColors.outer;
         this.updateBlackHoleColors();
         this.updateInputs();
     },
