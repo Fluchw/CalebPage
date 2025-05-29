@@ -42,28 +42,19 @@ function getShuffledMusicFiles(musicFiles) {
 
 // 随机选择颜色时使用 sessionStorage 而不是局部变量
 function getRandomColors() {
-    // 如果 sessionStorage 中已经有颜色配置，则使用它
-    const storedColors = sessionStorage.getItem('blackHoleRandomColors');
-    if (storedColors) {
-        return JSON.parse(storedColors);
-    }
-
-    // 否则生成新的随机颜色
+    // 每次都生成新的随机颜色
     const selectedOrange = getRandomColor(ORANGE_COLORS);
     const selectedBlue = getRandomColor(BLUE_COLORS);
     const isOrangeInner = Math.random() < 0.5;
+    console.log(`Selected Inner Color: ${isOrangeInner ? selectedOrange : selectedBlue}->${Math.random()}`);
     
-    const colors = {
+    return {
         inner: isOrangeInner ? selectedOrange : selectedBlue,
         outer: isOrangeInner ? selectedBlue : selectedOrange
     };
-
-    // 保存到 sessionStorage
-    sessionStorage.setItem('blackHoleRandomColors', JSON.stringify(colors));
-    return colors;
 }
 
-// 随机选择一个橙色和一个蓝色
+// 每次页面加载时重新生成随机颜色
 const randomColors = getRandomColors();
 const INNER_COLOR = randomColors.inner;
 const OUTER_COLOR = randomColors.outer;
@@ -71,15 +62,11 @@ const OUTER_COLOR = randomColors.outer;
 // 添加颜色控制器
 const ColorController = {
     init() {
+        // 每次初始化时使用新生成的随机颜色
         this.blackHoleEffect = {
             innerColor: INNER_COLOR,
             outerColor: OUTER_COLOR
         };
-        
-        // 从localStorage加载保存的颜色
-        const savedColors = JSON.parse(localStorage.getItem('blackHoleColors') || '{}');
-        if (savedColors.inner) this.blackHoleEffect.innerColor = savedColors.inner;
-        if (savedColors.outer) this.blackHoleEffect.outerColor = savedColors.outer;
         
         // 初始化时更新一次颜色
         this.updateBlackHoleColors();
@@ -106,9 +93,7 @@ const ColorController = {
     },
 
     reset() {
-        // 清除 sessionStorage 中的颜色配置
-        sessionStorage.removeItem('blackHoleRandomColors');
-        // 重新生成随机颜色
+        // 生成新的随机颜色
         const newColors = getRandomColors();
         this.blackHoleEffect.innerColor = newColors.inner;
         this.blackHoleEffect.outerColor = newColors.outer;
