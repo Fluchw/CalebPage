@@ -1,22 +1,38 @@
 // config.js
 
-// 默认颜色配置
-const DEFAULT_COLORS_1 = {
-    inner: "#00BFFF",  // 亮蓝色
-    outer: "#FFA500"   // 橙色
-};
+// 橙色系预设
+const ORANGE_COLORS = [
+    'rgb(255, 165, 0)',  // #FFA500
+    'rgb(236, 88, 0)',   // #EC5800
+    'rgb(255, 117, 24)', // #FF7518
+    'rgb(255, 95, 21)',  // #FF5F15
+    'rgb(240, 128, 0)',  // #F08000
+    'rgb(255, 170, 51)', // #FFAA33
+    'rgb(255, 149, 0)'   // Already in RGB format
+];
 
-const DEFAULT_COLORS_2 = {
-    inner: "#9400D3",  // 深紫色
-    outer: "#4169E1"   // 皇家蓝
-};
+// 蓝色系预设
+const BLUE_COLORS = [
+    'rgb(0, 0, 255)',     // #0000FF
+    'rgb(0, 150, 255)',   // #0096FF
+    'rgb(0, 71, 171)',    // Already in RGB format
+    'rgb(0, 106, 255)',   // Already in RGB format
+    'rgb(1, 67, 160)',    // Already in RGB format
+    'rgb(73, 115, 173)'   // Already in RGB format
+];
 
-// 当前默认颜色
-// const INNER_COLOR = "#0818A8";  
-// const OUTER_COLOR = "#FFA500";  
+// 随机获取颜色
+function getRandomColor(colorArray) {
+    return colorArray[Math.floor(Math.random() * colorArray.length)];
+}
 
-const INNER_COLOR = "#FFA500";  
-const OUTER_COLOR = "#0437F2";  
+// 随机选择一个橙色和一个蓝色
+const selectedOrange = getRandomColor(ORANGE_COLORS);
+const selectedBlue = getRandomColor(BLUE_COLORS);
+
+// 随机决定内外顺序
+const INNER_COLOR = Math.random() < 0.5 ? selectedOrange : selectedBlue;
+const OUTER_COLOR = INNER_COLOR === selectedOrange ? selectedBlue : selectedOrange;
 
 // 添加颜色控制器
 const ColorController = {
@@ -87,11 +103,8 @@ const ColorController = {
     },
 
     setupEventListeners() {
-        // 设置颜色输入监听
         const innerInput = document.getElementById('innerColorInput');
         const outerInput = document.getElementById('outerColorInput');
-        const defaultColors1Btn = document.getElementById('defaultColors1');
-        const defaultColors2Btn = document.getElementById('defaultColors2');
         const resetColorsBtn = document.getElementById('resetColors');
 
         if (innerInput) {
@@ -106,15 +119,17 @@ const ColorController = {
             });
         }
 
-        if (defaultColors1Btn) {
-            defaultColors1Btn.addEventListener('click', () => {
-                this.applyPreset(DEFAULT_COLORS_1);
-            });
-        }
-
-        if (defaultColors2Btn) {
-            defaultColors2Btn.addEventListener('click', () => {
-                this.applyPreset(DEFAULT_COLORS_2);
+        // 动态创建预设按钮
+        const presetContainer = document.getElementById('presetContainer');
+        if (presetContainer) {
+            COLOR_PRESETS.forEach((preset, index) => {
+                const presetBtn = document.createElement('button');
+                presetBtn.id = `colorPreset${index + 1}`;
+                presetBtn.textContent = `预设 ${index + 1}`;
+                presetBtn.addEventListener('click', () => {
+                    this.applyPreset(preset);
+                });
+                presetContainer.appendChild(presetBtn);
             });
         }
 
@@ -210,8 +225,8 @@ const APP_CONFIGS = {
         subtitle: "向下滑动，开启奇妙旅程"
     },
 
-    // 音乐播放器列表
-musicFiles: [
+    // 音乐播放器列表 - 直接在这里打乱顺序
+musicFiles: getShuffledMusicFiles([
     { title: "万象遇你", src: "music/沈洛君 - 恋与深空·万象遇你「钢琴」.mp3" },
     { title: "仲夏雨", src: "music/沈洛君 - 恋与深空·夏以昼·仲夏雨「钢琴」.mp3" },
     { title: "巨大轰鸣", src: "music/沈洛君 - 恋与深空·夏以昼·回归预告pv巨大轰鸣「钢琴」.mp3" },
@@ -227,7 +242,7 @@ musicFiles: [
     { title: "深空变奏", src: "music/沈洛君 - 恋与深空变奏.mp3" },
     { title: "万象遇你pv", src: "music/沈洛君 - 恋与深空·万象遇你pv「钢琴」.mp3" },
 
-],
+]),
 
     // 3D 旋转木马配置
     carousel: {
@@ -408,5 +423,9 @@ function processImageUrls(config) {
     return config;
 }
 
-// 导出处理后的配置
+// 修改导出的配置,每次重新洗牌音乐列表
+function getShuffledMusicFiles(musicFiles) {
+    return [...musicFiles].sort(() => Math.random() - 0.5);
+}
+
 const PROCESSED_APP_CONFIGS = processImageUrls(APP_CONFIGS);

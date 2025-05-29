@@ -691,30 +691,8 @@ document.addEventListener('DOMContentLoaded', () => {
         currentTimeDisplayId: 'currentTimeDisplay',
         totalDurationDisplayId: 'totalDurationDisplay',
         playerContainerId: 'musicPlayerContainer',
-        songList: getShuffledPlaylist(resolvedAppConfigs.musicFiles || []) 
+        songList: resolvedAppConfigs.musicFiles || [], // 直接使用打乱后的列表
     };
-
-    // Fisher-Yates 洗牌算法函数
-    function shuffleArray(array) {
-        for (let i = array.length - 1; i > 0; i--) {
-            const j = Math.floor(Math.random() * (i + 1));
-            [array[i], array[j]] = [array[j], array[i]]; // 使用解构赋值交换元素
-        }
-        return array; // 返回打乱后的数组
-    }
-
-    // 获取已保存的歌曲顺序或生成新的随机顺序
-    function getShuffledPlaylist(originalList) {
-        let shuffledIndexes = JSON.parse(localStorage.getItem('shuffledPlaylist'));
-        if (!shuffledIndexes || shuffledIndexes.length !== originalList.length) {
-            // 如果没有保存的顺序或长度不匹配，重新生成随机顺序
-            shuffledIndexes = Array.from({ length: originalList.length }, (_, i) => i);
-            shuffledIndexes = shuffleArray(shuffledIndexes);
-            localStorage.setItem('shuffledPlaylist', JSON.stringify(shuffledIndexes));
-        }
-        // 根据保存的顺序重新排列歌曲列表
-        return shuffledIndexes.map(index => originalList[index]);
-    }
 
     function initializeContentModulesOnce() {
         if (modulesInitialized) return;
