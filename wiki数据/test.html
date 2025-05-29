@@ -1,0 +1,155 @@
+<!DOCTYPE html>
+<html lang="zh">
+<head>
+  <meta charset="UTF-8" />
+  <title>角色印象站 - 数据展示</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      padding: 20px;
+    }
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      margin-top: 20px;
+    }
+    th, td {
+      border: 1px solid #ccc;
+      padding: 8px;
+      text-align: left;
+    }
+    th {
+      background-color: #f5f5f5;
+    }
+    img {
+      max-width: 50px;
+      max-height: 50px;
+    }
+    .hidden {
+      display: none;
+    }
+    select {
+      padding: 8px;
+      font-size: 16px;
+    }
+  </style>
+</head>
+<body>
+
+<h1>角色印象站 - 角色信息展示</h1>
+
+<label for="characterFilter">选择角色：</label>
+<select id="characterFilter" onchange="filterTable()">
+  <option value="">全部角色</option>
+  <option value="沈星回">沈星回</option>
+  <option value="黎深">黎深</option>
+  <option value="祁煜">祁煜</option>
+  <option value="秦彻">秦彻</option>
+  <option value="夏以昼">夏以昼</option>
+</select>
+
+<table id="characterTable">
+  <thead>
+    <tr>
+      <th>序号</th>
+      <th>角色名</th>
+      <th>稀有度</th>
+      <th>配件1</th>
+      <th>配件2</th>
+      <th>属性</th>
+      <th>名称</th>
+      <th>图标</th>
+      <th>长图</th>
+      <th>横图</th>
+    </tr>
+  </thead>
+  <tbody id="tableBody">
+    <!-- 数据将动态插入到这里 -->
+  </tbody>
+</table>
+
+<script>
+  // 加载 CSV 数据
+  fetch('./wiki_数据导出.csv') // 确保文件存在且路径正确
+    .then(response => {
+      if (!response.ok) throw new Error("无法加载 CSV 文件");
+      return response.text();
+    })
+    .then(data => {
+      const rows = data.trim().split('\n');
+      const headers = rows[0].split(','); // 表头
+      const tbody = document.getElementById('tableBody');
+
+      for (let i = 1; i < rows.length; i++) {
+        const cols = parseCSVRow(rows[i]); // 支持带引号的字段
+        if (cols.length < headers.length) continue;
+
+        const row = document.createElement('tr');
+
+        cols.forEach((col, index) => {
+          const cell = document.createElement('td');
+
+          // 对图片列进行渲染（图标、长图、横图）
+          if ((index === 7 || index === 8 || index === 9) && col.startsWith('http')) {
+            cell.innerHTML = `
+              <a href="${col}" target="_blank">
+                <img src="${col}" alt="图片" style="max-width: 50px;" />
+              </a><br>
+              <a href="${col}" target="_blank">${col}</a>
+            `;
+          } else {
+            cell.textContent = col;
+          }
+
+          row.appendChild(cell);
+        });
+
+        tbody.appendChild(row);
+      }
+    })
+    .catch(err => {
+      console.error(err);
+      alert("加载 CSV 文件失败，请确保文件存在且路径正确，并通过本地服务器运行本页面。");
+    });
+
+  // 解析带引号的 CSV 行（处理逗号在字符串中的情况）
+  function parseCSVRow(row) {
+    const result = [];
+    let current = '';
+    let inQuotes = false;
+
+    for (let i = 0; i < row.length; i++) {
+      const char = row[i];
+
+      if (char === '"' && !inQuotes) {
+        inQuotes = true;
+      } else if (char === '"' && inQuotes) {
+        inQuotes = false;
+      } else if (char === ',' && !inQuotes) {
+        result.push(current.trim());
+        current = '';
+      } else {
+        current += char;
+      }
+    }
+
+    result.push(current.trim());
+    return result;
+  }
+
+  // 筛选表格
+  function filterTable() {
+    const filterValue = document.getElementById('characterFilter').value.toLowerCase();
+    const rows = document.querySelectorAll('#tableBody tr');
+
+    rows.forEach(row => {
+      const roleNameCell = row.cells[1]; // 第二列是角色名
+      const roleName = roleNameCell ? roleNameCell.textContent.toLowerCase() : '';
+      const show = !filterValue || roleName.includes(filterValue);
+      row.classList.toggle('hidden', !show);
+    });
+  }
+</script>
+
+</body>
+</html>

@@ -1,0 +1,169 @@
+<!DOCTYPE html>
+<html lang="zh">
+<head>
+  <meta charset="UTF-8" />
+  <title>角色印象站 - 夏以昼数据展示</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      padding: 20px;
+    }
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      margin-top: 20px;
+    }
+    th, td {
+      border: 1px solid #ccc;
+      padding: 8px;
+      text-align: left;
+    }
+    th {
+      background-color: #f5f5f5;
+    }
+    img {
+      max-width: 50px;
+      max-height: 50px;
+    }
+    /* .hidden class is no longer needed if we don't filter dynamically */
+  </style>
+</head>
+<body>
+
+<h1>角色印象站 - 夏以昼 角色信息展示</h1>
+
+<table id="characterTable">
+  <thead>
+    <tr>
+      <th>序号</th>
+      <th>角色名</th>
+      <th>稀有度</th>
+      <th>配件1</th>
+      <th>配件2</th>
+      <th>属性</th>
+      <th>名称</th>
+      <th>图标</th>
+      <th>长图</th>
+      <th>横图</th>
+    </tr>
+  </thead>
+  <tbody id="tableBody">
+    </tbody>
+</table>
+
+<script>
+  // This dictionary will store the long image URLs for 夏以昼
+  const xiaYiZhouLongImageMap = {};
+
+  // Load CSV Data
+  fetch('./wiki_数据导出.csv') // Make sure the file exists and the path is correct
+    .then(response => {
+      if (!response.ok) throw new Error("无法加载 CSV 文件 (Unable to load CSV file)");
+      return response.text();
+    })
+    .then(data => {
+      const rows = data.trim().split('\n');
+      const headers = rows[0].split(','); // Header row
+      const tbody = document.getElementById('tableBody');
+      let xiaSerialCounter = 1; // Serial number counter for 夏以昼
+
+      for (let i = 1; i < rows.length; i++) {
+        const cols = parseCSVRow(rows[i]); // Parse CSV row, supports quoted fields
+        if (cols.length < headers.length) continue; // Skip incomplete rows
+
+        const characterName = cols[1]; // Assuming 角色名 (Character Name) is the second column (index 1)
+
+        // Filter for "夏以昼"
+        if (characterName === "夏以昼") {
+          const row = document.createElement('tr');
+
+          // Create an array for the current row's data, starting with the new serial number
+          const displayData = [
+            xiaSerialCounter, // New serial number
+            cols[1],        // 角色名 (Character Name)
+            cols[2],        // 稀有度 (Rarity)
+            cols[3],        // 配件1 (Accessory 1)
+            cols[4],        // 配件2 (Accessory 2)
+            cols[5],        // 属性 (Attribute)
+            cols[6],        // 名称 (Name Link)
+            cols[7],        // 图标 (Icon URL)
+            cols[8],        // 长图 (Long Image URL)
+            cols[9]         // 横图 (Horizontal Image URL)
+          ];
+
+          displayData.forEach((colData, dataIndex) => {
+            const cell = document.createElement('td');
+
+            // Render image columns (Icon, Long Image, Horizontal Image)
+            // These correspond to displayData indices 7, 8, 9
+            if ((dataIndex === 7 || dataIndex === 8 || dataIndex === 9) && typeof colData === 'string' && colData.startsWith('http')) {
+              cell.innerHTML = `
+                <a href="${colData}" target="_blank">
+                  <img src="${colData}" alt="图片" style="max-width: 50px;" />
+                </a><br>
+                <a href="${colData}" target="_blank">${colData}</a>
+              `;
+            } else {
+              cell.textContent = colData;
+            }
+            row.appendChild(cell);
+          });
+
+          tbody.appendChild(row);
+
+          // Populate the dictionary for 长图 (Long Image)
+          const longImageUrl = cols[8]; // URL for 长图 is in the 9th column (index 8)
+          if (longImageUrl && typeof longImageUrl === 'string' && longImageUrl.startsWith('http')) {
+            xiaYiZhouLongImageMap[xiaSerialCounter + ".长图"] = longImageUrl;
+          }
+
+          xiaSerialCounter++; // Increment serial number for the next 夏以昼 entry
+        }
+      }
+
+      // Log the created dictionary to the console
+      console.log("夏以昼 长图数据字典 (Xia Yizhou Long Image Data Dictionary):", xiaYiZhouLongImageMap);
+      // Example of how to access an image using the dictionary:
+      // if (xiaYiZhouLongImageMap["1.长图"]) {
+      //   console.log("第一条夏以昼长图:", xiaYiZhouLongImageMap["1.长图"]);
+      // }
+
+    })
+    .catch(err => {
+      console.error(err);
+      alert("加载 CSV 文件失败，请确保文件存在且路径正确，并通过本地服务器运行本页面。(Failed to load CSV file. Please ensure the file exists, the path is correct, and you are running this page via a local server.)");
+    });
+
+  // Parses a CSV row, handling commas within quoted strings
+  function parseCSVRow(row) {
+    const result = [];
+    let current = '';
+    let inQuotes = false;
+
+    for (let i = 0; i < row.length; i++) {
+      const char = row[i];
+
+      if (char === '"' && (i === 0 || row[i-1] !== '"')) { // Handles "" as escaped quote
+          if (inQuotes && i + 1 < row.length && row[i+1] === '"') {
+              current += '"'; // Escaped quote
+              i++; // Skip next quote
+          } else {
+              inQuotes = !inQuotes;
+          }
+      } else if (char === ',' && !inQuotes) {
+        result.push(current.trim());
+        current = '';
+      } else {
+        current += char;
+      }
+    }
+    result.push(current.trim());
+    return result;
+  }
+
+  // The filterTable() function is no longer needed as data is pre-filtered for 夏以昼.
+
+</script>
+
+</body>
+</html>
